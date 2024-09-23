@@ -7,9 +7,9 @@ import org.springframework.web.bind.annotation.RestController;
 public class HelloController {
 
 
-	@GetMapping("/enquiry")
+	@GetMapping("/health")
 	public String enquiry() {
-		return "enquiry!";
+		return "contoso svc is up and running!";
 	}
 	
 }

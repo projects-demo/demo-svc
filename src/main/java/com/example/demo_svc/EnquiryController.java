@@ -1,6 +1,10 @@
 package com.example.demo_svc;
 
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.server.ResponseStatusException;
+
 import java.time.LocalDateTime;
 import java.util.UUID;
 
@@ -8,11 +12,14 @@ import java.util.UUID;
 @RequestMapping("/enquiries")
 public class EnquiryController {
 
+    @Autowired
+    private EnquiryRepository enquiryRepository;
+
     @PostMapping
     public Enquiry createEnquiry(@RequestBody EnquiryRequest enquiryRequest) {
         Enquiry newEnquiry = new Enquiry();
-        // Generate customer_id and inquiry_date
-        newEnquiry.setCustomerId("CUST_" + UUID.randomUUID().toString());
+        // Generate enquiry_id and inquiry_date
+        newEnquiry.setEnquiryId(UUID.randomUUID().toString());
         newEnquiry.setInquiryDate(LocalDateTime.now());
 
         // Set other enquiry details from request
@@ -26,28 +33,30 @@ public class EnquiryController {
         newEnquiry.setCustomerFeedback(enquiryRequest.getCustomerFeedback());
         newEnquiry.setSalesExecutiveRemarks(enquiryRequest.getSalesExecutiveRemarks());
 
-        // Save the enquiry to the database (you can add repository logic here)
-        
-        return newEnquiry; // Return the created enquiry object
+        // Save the enquiry to the database
+        return enquiryRepository.save(newEnquiry);
     }
-    
-    
-    @GetMapping("/{id}")
-    public Enquiry getEnquiry(@PathVariable String id) {
-        // Retrieve the enquiry by id (this is just a mock response)
-        Enquiry enquiry = new Enquiry();
-        enquiry.setCustomerId(id);
-        enquiry.setInquiryDate(LocalDateTime.now());  // Just for example, you'd retrieve from the DB
-        enquiry.setCarModel("Hyundai");
-        enquiry.setCustomerAge(30);
-        enquiry.setCustomerName("Kanika");
-        enquiry.setLocation("Central");
-        enquiry.setInquirySource("dealer");
-        enquiry.setAvailableFinanceOptions(2);
-        enquiry.setContactNo(1234567890L);
-        enquiry.setCustomerFeedback("I like your car, will purchase next month");
-        enquiry.setSalesExecutiveRemarks("Good customer, follow up next month");
 
+    @GetMapping
+    public Enquiry getEnquiry(
+            @RequestParam(required = false) String enquiryId,
+            @RequestParam(required = false) Long contactNo,
+            @RequestParam(required = false) String customerName) {
+        
+        Enquiry enquiry = null;
+
+        if (enquiryId != null) {
+            enquiry = enquiryRepository.findById(enquiryId)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enquiry not found: "+enquiryId));
+        } else if (contactNo != null) {
+            enquiry = enquiryRepository.findByContactNo(contactNo)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enquiry not found: "+contactNo));
+        } else if (customerName != null) {
+            enquiry = enquiryRepository.findByCustomerName(customerName)
+                    .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enquiry not found: "+customerName));
+        }
+
+        // If no enquiry found, an exception would have been thrown
         return enquiry;
     }
 }
