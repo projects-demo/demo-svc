@@ -19,7 +19,9 @@ public class SwaggerConfig {
           .paths(PathSelectors.any())                          
           .build();                                           
     }
-/**
+
+    
+    /**
    @Override
    public void addResourceHandlers(ResourceHandlerRegistry registry) {
        registry.addResourceHandler("swagger-ui.html")
