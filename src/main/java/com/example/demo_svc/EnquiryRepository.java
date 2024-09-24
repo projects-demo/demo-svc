@@ -1,13 +1,15 @@
 package com.example.demo_svc;
 
-import org.springframework.data.jpa.repository.JpaRepository;
-
-
+import java.util.List;
 import java.util.Optional;
 
-public interface EnquiryRepository extends JpaRepository<Enquiry, String> {
+import org.springframework.data.jpa.repository.JpaRepository;
 
-    Optional<Enquiry> findByContactNo(Long contactNo);
+public interface EnquiryRepository extends JpaRepository<Enquiry, Long> {
 
-    Optional<Enquiry> findByCustomerName(String customerName);
+    Optional<Enquiry> findByEnquiryId(String enquiryId);
+
+    List<Enquiry> findAllByContactNo(Long contactNo);
+
+    List<Enquiry> findAllByCustomerName(String customerName);
 }
