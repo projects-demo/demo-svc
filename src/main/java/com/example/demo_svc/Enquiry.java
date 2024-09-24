@@ -43,6 +43,31 @@ public class Enquiry {
 
     @Column(name = "salesExecutiveRemarks")
     private String salesExecutiveRemarks;
+    
+    @Column(name = "manualScore")
+    private String manualScore;  
+    
+    @Column(name = "predictedScore")
+    private String predictedScore;  
+    
+    
+
+    public String getPredictedScore() {
+		return predictedScore;
+	}
+
+	public void setPredictedScore(String predictedScore) {
+		this.predictedScore = predictedScore;
+	}
+
+	public String getManualScore() {
+        return manualScore;
+    }
+
+    public void setManualScore(String manualScore) {
+        this.manualScore = manualScore;
+    }
+    
 
 	public Long getId() {
 		return id;

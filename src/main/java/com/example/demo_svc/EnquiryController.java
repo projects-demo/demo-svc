@@ -7,13 +7,15 @@ import java.util.UUID;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.PutMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
+import javax.servlet.http.HttpServletRequest;
+
 
 @RestController
 @RequestMapping("/enquiry")
@@ -23,10 +25,12 @@ public class EnquiryController {
     private EnquiryRepository enquiryRepository;
 
     @PostMapping("/create")
-    public Enquiry createEnquiry(@RequestBody EnquiryRequest enquiryRequest) {
+    public EnquiryResponse createEnquiry(@RequestBody EnquiryRequest enquiryRequest, HttpServletRequest request) {
         Enquiry newEnquiry = new Enquiry();
+        
         // Generate enquiry_id and inquiry_date
-        newEnquiry.setEnquiryId(UUID.randomUUID().toString());
+        String enquiryId = UUID.randomUUID().toString();
+        newEnquiry.setEnquiryId(enquiryId);
         newEnquiry.setInquiryDate(LocalDateTime.now());
 
         // Set other enquiry details from request
@@ -39,17 +43,25 @@ public class EnquiryController {
         newEnquiry.setContactNo(enquiryRequest.getContactNo());
         newEnquiry.setCustomerFeedback(enquiryRequest.getCustomerFeedback());
         newEnquiry.setSalesExecutiveRemarks(enquiryRequest.getSalesExecutiveRemarks());
+        newEnquiry.setManualScore(enquiryRequest.getManualScore());
+
 
         // Save the enquiry to the database
-        return enquiryRepository.save(newEnquiry);
-    }
+        enquiryRepository.save(newEnquiry);
 
-    @GetMapping("/{enquiryId}/details")
-    public Enquiry getEnquiryById(@PathVariable String enquiryId) {
+        // Construct the details URL using HttpServletRequest
+        String enquiryDetailsUrl = getBaseUrl(request) + "/enquiry/details?enquiryId=" + enquiryId;
+ 
+        // Return the custom response with the success message and the details URL
+        return new EnquiryResponse("Enquiry created successfully", enquiryDetailsUrl);
+    }
+    
+    @GetMapping("/details")
+    public Enquiry getEnquiryById(@RequestParam String enquiryId) {
         return enquiryRepository.findByEnquiryId(enquiryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enquiry not found: " + enquiryId));
     }
-    
+
 
  // Search for enquiries by contact number or customer name
     @GetMapping("/search")
@@ -72,4 +84,44 @@ public class EnquiryController {
         return enquiries;
     }
 
+    
+    @PutMapping("/update")
+    public EnquiryResponse updateEnquiry(@RequestParam String enquiryId, 
+                                         @RequestBody UpdateEnquiryRequest updateEnquiryRequest, HttpServletRequest request) {
+        // Find the existing enquiry by enquiryId
+        Enquiry existingEnquiry = enquiryRepository.findByEnquiryId(enquiryId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enquiry not found: " + enquiryId));
+
+        // Append to Sales Executive Remarks if provided
+        if (updateEnquiryRequest.getSalesExecutiveRemarks() != null) {
+            String updatedRemarks = existingEnquiry.getSalesExecutiveRemarks() != null
+                    ? existingEnquiry.getSalesExecutiveRemarks() + "\n" + updateEnquiryRequest.getSalesExecutiveRemarks()
+                    : updateEnquiryRequest.getSalesExecutiveRemarks();
+            existingEnquiry.setSalesExecutiveRemarks(updatedRemarks);
+        }
+
+        // Append to Customer Feedback if provided
+        if (updateEnquiryRequest.getCustomerFeedback() != null) {
+            String updatedFeedback = existingEnquiry.getCustomerFeedback() != null
+                    ? existingEnquiry.getCustomerFeedback() + "\n" + updateEnquiryRequest.getCustomerFeedback()
+                    : updateEnquiryRequest.getCustomerFeedback();
+            existingEnquiry.setCustomerFeedback(updatedFeedback);
+        }
+
+        // Update the manualScore if provided (hot/warm/cold)
+        if (updateEnquiryRequest.getManualScore() != null) {
+            existingEnquiry.setManualScore(updateEnquiryRequest.getManualScore());
+        }
+
+        // Save the updated enquiry
+        enquiryRepository.save(existingEnquiry);
+        String enquiryDetailsUrl = getBaseUrl(request) + "/enquiry/details?enquiryId=" + enquiryId;
+
+        return new EnquiryResponse("Enquiry updated successfully", enquiryDetailsUrl);
+    }
+    
+    private String getBaseUrl(HttpServletRequest request) {
+        return request.getScheme() + "://" + request.getServerName() + ":" + request.getServerPort();
+    }
+    
 }

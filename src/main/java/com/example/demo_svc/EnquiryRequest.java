@@ -10,6 +10,16 @@ public class EnquiryRequest {
     private long contactNo;
     private String customerFeedback;
     private String salesExecutiveRemarks;
+	private String manualScore;
+
+	
+
+	public String getManualScore() {
+		return manualScore;
+	}
+	public void setManualScore(String manualScore) {
+		this.manualScore = manualScore;
+	}
 	public String getCarModel() {
 		return carModel;
 	}
