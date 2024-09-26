@@ -1,27 +1,13 @@
 package com.example.demo_svc;
 
-public class EnquiryResponse {
+public class EnquiryResponseUpdate {
 	private String message;
 	private String enquiryDetailsUrl;
-	private String predictedScore;
 
-
-	public EnquiryResponse(String message, String enquiryDetailsUrl, String predictedScore) {
+	public EnquiryResponseUpdate(String message, String enquiryDetailsUrl) {
 		this.message = message;
 		this.enquiryDetailsUrl = enquiryDetailsUrl;
-		this.predictedScore = predictedScore;
 	}
-
-
-	public String getPredictedScore() {
-		return predictedScore;
-	}
-
-
-	public void setPredictedScore(String predictedScore) {
-		this.predictedScore = predictedScore;
-	}
-
 
 	public String getMessage() {
 		return message;

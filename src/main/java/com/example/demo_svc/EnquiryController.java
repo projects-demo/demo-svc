@@ -1,8 +1,10 @@
 package com.example.demo_svc;
 
-import java.time.LocalDateTime;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.UUID;
+
+import javax.servlet.http.HttpServletRequest;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
@@ -14,7 +16,6 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
-import javax.servlet.http.HttpServletRequest;
 
 
 @RestController
@@ -23,47 +24,52 @@ public class EnquiryController {
 
     @Autowired
     private EnquiryRepository enquiryRepository;
-
+    
+    @Autowired
+    private ScoreService scoreService;
+    
     @PostMapping("/create")
     public EnquiryResponse createEnquiry(@RequestBody EnquiryRequest enquiryRequest, HttpServletRequest request) {
         Enquiry newEnquiry = new Enquiry();
         
-        // Generate enquiry_id and inquiry_date
         String enquiryId = UUID.randomUUID().toString();
         newEnquiry.setEnquiryId(enquiryId);
-        newEnquiry.setInquiryDate(LocalDateTime.now());
+        newEnquiry.setInquiryDate(LocalDate.now());
 
-        // Set other enquiry details from request
+        newEnquiry.setExpectedPurchaseDate(enquiryRequest.getExpectedPurchaseDate());
+        newEnquiry.setPurchaseMode(enquiryRequest.getPurchaseMode());
         newEnquiry.setCarModel(enquiryRequest.getCarModel());
         newEnquiry.setCustomerAge(enquiryRequest.getCustomerAge());
         newEnquiry.setCustomerName(enquiryRequest.getCustomerName());
         newEnquiry.setLocation(enquiryRequest.getLocation());
         newEnquiry.setInquirySource(enquiryRequest.getInquirySource());
-        newEnquiry.setAvailableFinanceOptions(enquiryRequest.getAvailableFinanceOptions());
         newEnquiry.setContactNo(enquiryRequest.getContactNo());
-        newEnquiry.setCustomerFeedback(enquiryRequest.getCustomerFeedback());
+        newEnquiry.setCustomerFeedback(enquiryRequest.getCustomerEnquiry());
         newEnquiry.setSalesExecutiveRemarks(enquiryRequest.getSalesExecutiveRemarks());
         newEnquiry.setManualScore(enquiryRequest.getManualScore());
+        newEnquiry.setCustomerEnquiryFrequency(enquiryRequest.getCustomerEnquiryFrequency());
 
-
-        // Save the enquiry to the database
         enquiryRepository.save(newEnquiry);
 
-        // Construct the details URL using HttpServletRequest
+        String predictedScore = scoreService.callScoreEndpoint(newEnquiry);
+        
+        System.err.println("predictedScore---" + predictedScore);
+
         String enquiryDetailsUrl = getBaseUrl(request) + "/enquiry/details?enquiryId=" + enquiryId;
- 
-        // Return the custom response with the success message and the details URL
-        return new EnquiryResponse("Enquiry created successfully", enquiryDetailsUrl);
+
+        return new EnquiryResponse("Enquiry created successfully", enquiryDetailsUrl, predictedScore);
     }
-    
+
     @GetMapping("/details")
-    public Enquiry getEnquiryById(@RequestParam String enquiryId) {
-        return enquiryRepository.findByEnquiryId(enquiryId)
+    public EnquiryResponseDetails getEnquiryById(@RequestParam String enquiryId) {
+        Enquiry enquiry = enquiryRepository.findByEnquiryId(enquiryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enquiry not found: " + enquiryId));
-    }
 
+        String predictedScore = scoreService.callScoreEndpoint(enquiry);
 
- // Search for enquiries by contact number or customer name
+        return new EnquiryResponseDetails(enquiry, predictedScore);
+    }  
+
     @GetMapping("/search")
     public List<Enquiry> searchEnquiries(
             @RequestParam(required = false) Long contactNo,
@@ -86,13 +92,11 @@ public class EnquiryController {
 
     
     @PutMapping("/update")
-    public EnquiryResponse updateEnquiry(@RequestParam String enquiryId, 
+    public EnquiryResponseDetails updateEnquiry(@RequestParam String enquiryId, 
                                          @RequestBody UpdateEnquiryRequest updateEnquiryRequest, HttpServletRequest request) {
-        // Find the existing enquiry by enquiryId
         Enquiry existingEnquiry = enquiryRepository.findByEnquiryId(enquiryId)
                 .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Enquiry not found: " + enquiryId));
 
-        // Append to Sales Executive Remarks if provided
         if (updateEnquiryRequest.getSalesExecutiveRemarks() != null) {
             String updatedRemarks = existingEnquiry.getSalesExecutiveRemarks() != null
                     ? existingEnquiry.getSalesExecutiveRemarks() + "\n" + updateEnquiryRequest.getSalesExecutiveRemarks()
@@ -100,7 +104,6 @@ public class EnquiryController {
             existingEnquiry.setSalesExecutiveRemarks(updatedRemarks);
         }
 
-        // Append to Customer Feedback if provided
         if (updateEnquiryRequest.getCustomerFeedback() != null) {
             String updatedFeedback = existingEnquiry.getCustomerFeedback() != null
                     ? existingEnquiry.getCustomerFeedback() + "\n" + updateEnquiryRequest.getCustomerFeedback()
@@ -108,16 +111,13 @@ public class EnquiryController {
             existingEnquiry.setCustomerFeedback(updatedFeedback);
         }
 
-        // Update the manualScore if provided (hot/warm/cold)
         if (updateEnquiryRequest.getManualScore() != null) {
             existingEnquiry.setManualScore(updateEnquiryRequest.getManualScore());
         }
 
-        // Save the updated enquiry
         enquiryRepository.save(existingEnquiry);
-        String enquiryDetailsUrl = getBaseUrl(request) + "/enquiry/details?enquiryId=" + enquiryId;
-
-        return new EnquiryResponse("Enquiry updated successfully", enquiryDetailsUrl);
+        
+        return getEnquiryById(enquiryId);       
     }
     
     private String getBaseUrl(HttpServletRequest request) {

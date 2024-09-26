@@ -1,80 +1,81 @@
 package com.example.demo_svc;
 
-import javax.persistence.*;
-import java.time.LocalDateTime;
+import java.time.LocalDate;
+
+import javax.persistence.Column;
+import javax.persistence.Entity;
+import javax.persistence.Id;
+import javax.persistence.Table;
 
 @Entity
 @Table(name = "CustomerEnquiry")
 public class Enquiry {
 
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private Long id;
+	@Id
+	@Column(name = "inquiryId")
+	private String enquiryId;
 
-    @Column(name = "enquiryId")
-    private String enquiryId;
+	@Column(name = "inquiryDate")
+	private LocalDate inquiryDate;
 
-    @Column(name = "inquiryDate")
-    private LocalDateTime inquiryDate;
+	@Column(name = "expectedPurchaseDate")
+	private LocalDate expectedPurchaseDate;
 
-    @Column(name = "carModel")
-    private String carModel;
+	@Column(name = "carModel")
+	private String carModel;
 
-    @Column(name = "customerAge")
-    private Integer customerAge;
+	@Column(name = "customerAge")
+	private Integer customerAge;
 
-    @Column(name = "customerName")
-    private String customerName;
+	@Column(name = "customerName")
+	private String customerName;
 
-    @Column(name = "location")
-    private String location;
+	@Column(name = "location")
+	private String location;
 
-    @Column(name = "inquirySource")
-    private String inquirySource;
+	@Column(name = "inquirySource")
+	private String inquirySource;
 
-    @Column(name = "availableFinanceOptions")
-    private Integer availableFinanceOptions;
+	@Column(name = "contactNo")
+	private Long contactNo;
 
-    @Column(name = "contactNo")
-    private Long contactNo;
+	@Column(name = "customerEnquiry")
+	private String customerEnquiry;
 
-    @Column(name = "customerFeedback")
-    private String customerFeedback;
+	@Column(name = "customerEnquiryFrequency")
+	private Integer customerEnquiryFrequency;
 
-    @Column(name = "salesExecutiveRemarks")
-    private String salesExecutiveRemarks;
-    
-    @Column(name = "manualScore")
-    private String manualScore;  
-    
-    @Column(name = "predictedScore")
-    private String predictedScore;  
-    
-    
+	@Column(name = "salesExecutiveRemarks")
+	private String salesExecutiveRemarks;
 
-    public String getPredictedScore() {
-		return predictedScore;
+	@Column(name = "manualScore")
+	private String manualScore;
+
+	@Column(name = "purchaseMode")
+	private String purchaseMode;
+
+	public String getCustomerEnquiry() {
+		return customerEnquiry;
 	}
 
-	public void setPredictedScore(String predictedScore) {
-		this.predictedScore = predictedScore;
+	public void setCustomerEnquiry(String customerEnquiry) {
+		this.customerEnquiry = customerEnquiry;
+	}
+
+	public String getPurchaseMode() {
+		return purchaseMode;
+	}
+
+	public void setPurchaseMode(String purchaseMode) {
+		this.purchaseMode = purchaseMode;
 	}
 
 	public String getManualScore() {
-        return manualScore;
-    }
-
-    public void setManualScore(String manualScore) {
-        this.manualScore = manualScore;
-    }
-    
-
-	public Long getId() {
-		return id;
+		return manualScore;
 	}
 
-	public void setId(Long id) {
-		this.id = id;
+	public void setManualScore(String manualScore) {
+		this.manualScore = manualScore;
 	}
 
 	public String getEnquiryId() {
@@ -85,12 +86,20 @@ public class Enquiry {
 		this.enquiryId = customerId;
 	}
 
-	public LocalDateTime getInquiryDate() {
+	public LocalDate getInquiryDate() {
 		return inquiryDate;
 	}
 
-	public void setInquiryDate(LocalDateTime inquiryDate) {
+	public void setInquiryDate(LocalDate inquiryDate) {
 		this.inquiryDate = inquiryDate;
+	}
+
+	public LocalDate getExpectedPurchaseDate() {
+		return expectedPurchaseDate;
+	}
+
+	public void setExpectedPurchaseDate(LocalDate expectedPurchaseDate) {
+		this.expectedPurchaseDate = expectedPurchaseDate;
 	}
 
 	public String getCarModel() {
@@ -133,14 +142,6 @@ public class Enquiry {
 		this.inquirySource = inquirySource;
 	}
 
-	public Integer getAvailableFinanceOptions() {
-		return availableFinanceOptions;
-	}
-
-	public void setAvailableFinanceOptions(Integer availableFinanceOptions) {
-		this.availableFinanceOptions = availableFinanceOptions;
-	}
-
 	public Long getContactNo() {
 		return contactNo;
 	}
@@ -150,11 +151,11 @@ public class Enquiry {
 	}
 
 	public String getCustomerFeedback() {
-		return customerFeedback;
+		return customerEnquiry;
 	}
 
-	public void setCustomerFeedback(String customerFeedback) {
-		this.customerFeedback = customerFeedback;
+	public void setCustomerFeedback(String customerEnquiry) {
+		this.customerEnquiry = customerEnquiry;
 	}
 
 	public String getSalesExecutiveRemarks() {
@@ -164,6 +165,15 @@ public class Enquiry {
 	public void setSalesExecutiveRemarks(String salesExecutiveRemarks) {
 		this.salesExecutiveRemarks = salesExecutiveRemarks;
 	}
+
+	public Integer getCustomerEnquiryFrequency() {
+		return customerEnquiryFrequency;
+	}
+
+	public void setCustomerEnquiryFrequency(Integer customerEnquiryFrequency) {
+		this.customerEnquiryFrequency = customerEnquiryFrequency;
+	}
+
 
 
 }
